@@ -1,0 +1,69 @@
+#!/bin/bash
+#
+# ZNC - zantekk's nightly-creator v0.2.2
+# by Marco Kretz <zantekk@gmail.com>
+#
+# You can use and modify this script as often as you wish
+# but pls give credits to me!
+ 
+# CONFIGURATION
+# -- set url for remote svn-repo
+# -- set path to local copy (checkout)
+# -- set path to your work-dir (where exports, logs and zips will be done)
+ 
+REMOTE_REPO=https://renovate-m7.googlecode.com/svn/trunk
+LOCAL_REPO=/home/zantekk/website/one/renovate/src/
+WORK_DIR=/home/zantekk/website/one/renovate
+ 
+ 
+## DO NOT EDIT THIS PART!
+# =================================================#
+ 
+echo "+--------/   \--------+"
+echo "|         ZNC         |"
+echo "|      zantekk's      |"
+echo "|   nightly creator   |"
+echo "+---------------------+"
+echo ""
+ 
+# Creating folders if dont exist
+if ! [ -d "$WORK_DIR/dl" ]; then mkdir $WORK_DIR/dl; fi
+if ! [ -d "$WORK_DIR/export" ]; then mkdir $WORK_DIR/export; fi
+if ! [ -d "$WORK_DIR/log" ]; then mkdir $WORK_DIR/log; fi
+ 
+# check if settings are ok
+#
+# Uncomment the two following lines and comment the 3rd
+# if curl ist installed to check if REMOTE_REPO is a
+# valid URL.
+#
+# curl -s --head $REMOTE_REPO | head -n 1 | grep "HTTP/1.[01] [23].." > /dev/null
+# if ! [ -d "$LOCAL_REPO" ] || ! [ -d "$WORK_DIR"  ] || (( $$? > 0  )); then  exit 1; fi
+if ! [ -d "$LOCAL_REPO" ] || ! [ -d "$WORK_DIR"  ]; then  exit 1; fi
+ 
+# Get latest revisions, remote and local
+echo "Checking if newer revision is available..."
+REMOTE_REV=`svn info $REMOTE_REPO | grep Revision | cut -d:  -f 2 | tr -d ' '`
+LOCAL_REV=`svn info $LOCAL_REPO | grep Revision | cut -d:  -f 2 | tr -d ' '`
+ 
+if [ "$REMOTE_REV" -gt "$LOCAL_REV"  ] || ! [ -e $WORK_DIR/log/$REMOTE_REV.log ]
+    then
+        touch $WORK_DIR/log/$REMOTE_REV.log
+        date >> $WORK_DIR/log/$REMOTE_REV.log
+        echo "Updating to newest revision..."
+        svn update $LOCAL_REPO
+        echo "Repo sync -- OK!" >> $WORK_DIR/log/$REMOTE_REV.log
+        echo "Getting rid of that damn svn files..."
+        svn export --force $LOCAL_REPO $WORK_DIR/export
+        echo "Export -- OK!" >> $WORK_DIR/log/$REMOTE_REV.log
+        echo "Zipping files..."
+        cd $WORK_DIR/export
+        zip -r renovate-r$REMOTE_REV . > /dev/null
+        echo "Zipping -- OK!" >> $WORK_DIR/log/$REMOTE_REV.log
+        mv renovate-r$REMOTE_REV.zip $WORK_DIR/dl/
+        rm -R $WORK_DIR/export/*
+        echo "Finished."
+        echo "Build successfull!" >> $WORK_DIR/log/$REMOTE_REV.log
+else
+    echo "Up-to-date."
+fi
