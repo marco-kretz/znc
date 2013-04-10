@@ -11,9 +11,9 @@
 # -- set path to local copy (checkout)
 # -- set path to your work-dir (where exports, logs and zips will be done)
  
-REMOTE_REPO=https://renovate-m7.googlecode.com/svn/trunk
-LOCAL_REPO=/home/zantekk/website/one/renovate/src/
-WORK_DIR=/home/zantekk/website/one/renovate
+REMOTE_REPO=https://url.to/your/trunk
+LOCAL_REPO=/your/local/trunk
+WORK_DIR=/your/working/dir
  
  
 ## DO NOT EDIT THIS PART!
